@@ -42,8 +42,19 @@ def two_in_a_row(hsh, mrkr)
 end
 
 def computer_places_piece(board)
-  position = empty_positions(board).sample
-  board[position] ="O"
+  attack_position = nil
+  defend_position = nil
+  WINNING_LINES.each do |line|
+    attack_position = two_in_a_row({ line[0]=>board[line[0]], line[1]=>board[line[1]], line[2]=>board[line[2]] }, "O")
+    break if attack_position
+  end
+  WINNING_LINES.each do |line|
+    defend_position = two_in_a_row({ line[0]=>board[line[0]], line[1]=>board[line[1]], line[2]=>board[line[2]] }, "X")
+    break if defend_position
+  end
+
+  position = attack_position || defend_position || empty_positions(board).sample 
+  board[position] = "O"
 end
 
 def check_winner(board)
@@ -54,22 +65,27 @@ def check_winner(board)
   nil
 end
 
-def all_positions_are_taken?(board)
-  empty_positions(board) == []
+def it_is_a_tie?(board)
+  # empty_positions(board) == []
+  if empty_positions(board).length == 1
+    board[empty_positions(board).first] = "X"
+    return true if !check_winner(board)
+  end
 end
 
 board = initialize_board
 draw_board(board)
 
 begin
-  player_places_piece(board)
+  player_places_piece(board) 
   computer_places_piece(board) if !check_winner(board)
   draw_board(board)
   winner = check_winner(board)
-end until winner || all_positions_are_taken?(board)
+end until winner || it_is_a_tie?(board)
 
 if winner
   puts "#{winner} won!"
 else
+  draw_board(board)
   puts "It's a tie"
 end
