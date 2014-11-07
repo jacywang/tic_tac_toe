@@ -1,64 +1,75 @@
-def print_out_frame(spot_arr)
-  puts " " * 5 + "|" + " " * 5 + "|" + " " * 5
-  puts " " * 2+ spot_arr[0] + " " * 2 + "|" + " " * 2+ spot_arr[1] + " " * 2 + "|" + " " * 2+ spot_arr[2] + " " * 2
-  puts " " * 5 + "|" + " " * 5 + "|" + " " * 5
-  puts "-" * 5 + "+" + "-" * 5 + "+" + "-" * 5
-  puts " " * 5 + "|" + " " * 5 + "|" + " " * 5
-  puts " " * 2+ spot_arr[3] + " " * 2 + "|" + " " * 2+ spot_arr[4] + " " * 2 + "|" + " " * 2+ spot_arr[5] + " " * 2
-  puts " " * 5 + "|" + " " * 5 + "|" + " " * 5
-  puts "-" * 5 + "+" + "-" * 5 + "+" + "-" * 5
-  puts " " * 5 + "|" + " " * 5 + "|" + " " * 5
-  puts " " * 2+ spot_arr[6] + " " * 2 + "|" + " " * 2+ spot_arr[7] + " " * 2 + "|" + " " * 2+ spot_arr[8] + " " * 2
-  puts " " * 5 + "|" + " " * 5 + "|" + " " * 5
+WINNING_LINES = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], [3,6,9], [1,5,9], [3,5,7]]
+
+def initialize_board
+  board = {}
+  (1..9).each { |position| board[position] = " " }
+  board
 end
 
-def who_won(who, choices)
-  result = false
-  choices.combination(3).to_a.each do |val|
-    result = (result || WINNING_SOLUTIONS.include?(val))
-  end
-  puts "#{who} won!" if result
-  result
+def draw_board(board)
+  system 'clear'
+  puts "     |     |     "
+  puts "  #{board[1]}  |  #{board[2]}  |  #{board[3]}  "
+  puts "     |     |     "
+  puts "-----+-----+-----"
+  puts "     |     |     "
+  puts "  #{board[4]}  |  #{board[5]}  |  #{board[6]}  "
+  puts "     |     |     "
+  puts "-----+-----+-----"
+  puts "     |     |     "
+  puts "  #{board[7]}  |  #{board[8]}  |  #{board[9]}  "
+  puts "     |     |     "
 end
 
+def empty_positions(board)
+  board.select { |key, value| value == " " }.keys
+end
 
-spots = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-WINNING_SOLUTIONS = [[1, 2, 3], [1, 4, 7], [1, 5, 9], [2, 5, 8], 
-                     [3, 6, 9], [3, 5, 7], [4, 5, 6], [7, 8, 9]]
-player_choices = []
-computer_choices = []
-
-spot_arr = [" ", " ", " ", " ", " ", " ", " ", " ", " "]
-print_out_frame(spot_arr)
-
-begin   
+def player_places_piece(board)
   begin
     puts "Choose a position (from 1 to 9) to place a piece:"
-    player_choice = gets.chomp.to_i
-  end until spots.include?(player_choice)
+    position = gets.chomp.to_i
+  end until empty_positions(board).include?(position)
+  board[position] = "X"
+end
 
-  player_choices << player_choice
-  player_choices.sort!
-  spots.delete(player_choice)
-  spot_arr[player_choice - 1] = "×"
-
-  if !spots.empty? && !who_won('You', player_choices) && !who_won('Computer', computer_choices)
-    computer_choice = spots.sample
-    computer_choices << computer_choice
-    computer_choices.sort!
-    spots.delete(computer_choice)
-    spot_arr[computer_choice - 1] = "0"
+def two_in_a_row(hsh, mrkr)
+  if hsh.values.count(mrkr) == 2
+    hsh.select{|k,v| v == ' '}.keys.first
+  else
+    false
   end
+end
 
-  print_out_frame(spot_arr)
-end until ( who_won('You', player_choices) || who_won('Computer', computer_choices))
+def computer_places_piece(board)
+  position = empty_positions(board).sample
+  board[position] ="O"
+end
 
+def check_winner(board)
+  WINNING_LINES.each do |line|
+    return "Player" if board.values_at(*line).count('X') == 3
+    return "Computer" if board.values_at(*line).count('O') == 3
+  end
+  nil
+end
 
+def all_positions_are_taken?(board)
+  empty_positions(board) == []
+end
 
+board = initialize_board
+draw_board(board)
 
+begin
+  player_places_piece(board)
+  computer_places_piece(board) if !check_winner(board)
+  draw_board(board)
+  winner = check_winner(board)
+end until winner || all_positions_are_taken?(board)
 
-
-
-
-
-
+if winner
+  puts "#{winner} won!"
+else
+  puts "It's a tie"
+end
